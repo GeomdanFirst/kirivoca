@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>키리보카 1단계 - 300단어 & 60예문 읽기 훈련 플래시카드</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #eef2ff;
+      --primary-dark: #3730a3;
+      --success: #10b981;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #f59e0b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 840px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* Header */
+    header {
+      text-align: center;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    /* Top Tabs (Modes) */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: #e2e8f0;
+      padding: 6px;
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    /* Stage Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .stage-btn {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .stage-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    /* Toolbar / Toggles */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .toolbar-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    .toggle-label input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    select.speed-select {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+    /* Flashcard Area */
+    .card-wrapper {
+      perspective: 1000px;
+      margin: 8px 0;
+    }
+    .flashcard {
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.08);
+      border: 2px solid #e0e7ff;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 320px;
+      text-align: center;
+      position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .flashcard:hover {
+      border-color: var(--primary);
+      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.12);
+    }
+    .card-badge {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .card-stage {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+    .card-word {
+      font-size: 4rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 16px 0 8px;
+      letter-spacing: -0.5px;
+      word-break: break-word;
+    }
+    .card-pron {
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-weight: 600;
+      background: var(--primary-light);
+      padding: 4px 16px;
+      border-radius: 12px;
+      display: inline-block;
+      min-height: 32px;
+    }
+    .card-meaning {
+      font-size: 1.4rem;
+      color: #334155;
+      font-weight: 500;
+      margin-top: 8px;
+      line-height: 1.4;
+      min-height: 36px;
+    }
+    .card-sentence-hint {
+      margin-top: 16px;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      color: #475569;
+    }
+    /* Hidden state */
+    .hidden-content {
+      background: #e2e8f0 !important;
+      color: transparent !important;
+      user-select: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hidden-content::after {
+      content: "👁️ 클릭하여 확인";
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    /* Navigation Bar */
+    .nav-controls {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 12px;
+    }
+    .ctrl-btn {
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .ctrl-btn:active {
+      transform: scale(0.97);
+    }
+    .btn-prev {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+    .btn-prev:hover {
+      background: #cbd5e1;
+    }
+    .btn-sound {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .btn-sound:hover {
+      background: var(--primary-dark);
+    }
+    .btn-next {
+      background: var(--success);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-next:hover {
+      background: #059669;
+    }
+    /* Quick Jump & Progress */
+    .jump-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .jump-inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .jump-inputs input {
+      width: 60px;
+      padding: 6px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .jump-btn {
+      padding: 6px 12px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .progress-track {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      margin: 0 16px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.2s;
+    }
+    /* Shortcuts guidance */
+    .shortcuts-guide {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .shortcuts-guide kbd {
+      background: #e2e8f0;
+      color: #334155;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.75rem;
+    }
+    /* Table View Container */
+    .view-container {
+      display: none;
+    }
+    .view-container.active {
+      display: block;
+    }
+    .table-container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .table-search {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+    .table-search input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+    .data-table th {
+      background: #f8fafc;
+      padding: 10px 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .data-table tr:hover td {
+      background: var(--primary-light);
+    }
+    .btn-table-play {
+      background: #eef2ff;
+      color: var(--primary);
+      border: 1px solid #c7d2fe;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn-table-play:hover {
+      background: var(--primary);
+      color: white;
+    }
+    @media (max-width: 600px) {
+      .card-word { font-size: 2.8rem; }
+      .card-pron { font-size: 1.1rem; }
+      .card-meaning { font-size: 1.2rem; }
+      .ctrl-btn { padding: 12px; font-size: 0.95rem; }
+      .nav-controls { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>키리보카 1단계 스피드 읽기 훈련</h1>
+    <p>초등 4학년 맞춤 300단어 & 60개 예문 플래시카드 (원어민 영어 발음 탑재)</p>
+  </header>
+
+  <!-- Top Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchView('card-word')">🔤 단어 카드 (300)</button>
+    <button class="tab-btn" onclick="switchView('card-sent')">📝 예문 카드 (60)</button>
+    <button class="tab-btn" onclick="switchView('list-word')">📋 전체 단어 목록</button>
+    <button class="tab-btn" onclick="switchView('list-sent')">📋 전체 예문 목록</button>
+  </div>
+
+  <!-- Stage Filter Bar (For Words) -->
+  <div class="filter-bar" id="stageFilterBar">
+    <button class="stage-btn active" onclick="setStage('all')">전체 (300)</button>
+    <button class="stage-btn" onclick="setStage('001-050')">1단계 (1~50)</button>
+    <button class="stage-btn" onclick="setStage('051-100')">2단계 (51~100)</button>
+    <button class="stage-btn" onclick="setStage('101-150')">3단계 (101~150)</button>
+    <button class="stage-btn" onclick="setStage('151-200')">4단계 (151~200)</button>
+    <button class="stage-btn" onclick="setStage('201-250')">5단계 (201~250)</button>
+    <button class="stage-btn" onclick="setStage('251-300')">6단계 (251~300)</button>
+  </div>
+
+  <!-- Toolbar Options -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <label class="toggle-label">
+        <input type="checkbox" id="autoSpeakToggle" checked>
+        <span>🔊 넘길 때 원어민 발음 자동 재생</span>
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="hideMeaningToggle" onchange="toggleMasking()">
+        <span>🙈 뜻 가리기 (훈련용)</span>
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="hidePronToggle" onchange="toggleMasking()">
+        <span>🗣️ 발음표기 가리기</span>
+      </label>
+    </div>
+    <div class="toolbar-group">
+      <label class="toggle-label">
+        <input type="checkbox" id="shuffleToggle" onchange="toggleShuffle()">
+        <span>🔀 섞어서 보기</span>
+      </label>
+      <label class="toggle-label">
+        <span>속도:</span>
+        <select class="speed-select" id="speechSpeed">
+          <option value="0.8">0.8x (천천히)</option>
+          <option value="1.0" selected>1.0x (보통)</option>
+          <option value="1.2">1.2x (빠르게)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- VIEW 1: WORD FLASHCARD -->
+  <div id="viewCardWord" class="view-container active">
+    <div class="card-wrapper">
+      <div class="flashcard" onclick="speakCurrentWord()">
+        <span class="card-badge" id="wordBadge">No. 001</span>
+        <span class="card-stage" id="wordStageBadge">Stage 1</span>
+        
+        <div class="card-word" id="wordDisplay">I</div>
+        <div class="card-pron" id="pronDisplay" onclick="revealPron(event)">[aɪ / 아이]</div>
+        <div class="card-meaning" id="meaningDisplay" onclick="revealMeaning(event)">나는, 내가</div>
+      </div>
+    </div>
+
+    <!-- Nav Controls -->
+    <div class="nav-controls">
+      <button class="ctrl-btn btn-prev" onclick="prevWord()">◀ 이전 (←)</button>
+      <button class="ctrl-btn btn-sound" onclick="speakCurrentWord()">🔊 발음 듣기 (S)</button>
+      <button class="ctrl-btn btn-next" onclick="nextWord()">다음 ▶ (Space/→)</button>
+    </div>
+
+    <!-- Progress & Jump -->
+    <div class="jump-bar" style="margin-top: 12px;">
+      <span id="counterDisplay">1 / 300</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+      <div class="jump-inputs">
+        <input type="number" id="jumpNumInput" min="1" max="300" value="1">
+        <button class="jump-btn" onclick="jumpToWord()">이동</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: SENTENCE FLASHCARD -->
+  <div id="viewCardSent" class="view-container">
+    <div class="card-wrapper">
+      <div class="flashcard" onclick="speakCurrentSentence()">
+        <span class="card-badge" id="sentBadge">예문 01 / 60</span>
+        <span class="card-stage" id="sentStageBadge">001-050</span>
+        
+        <div class="card-word" id="sentDisplay" style="font-size: 2.4rem; padding: 0 10px;">I am a boy.</div>
+        <div class="card-meaning" id="sentMeaningDisplay" style="font-size: 1.3rem;">나는 소년이다.</div>
+      </div>
+    </div>
+
+    <div class="nav-controls">
+      <button class="ctrl-btn btn-prev" onclick="prevSentence()">◀ 이전</button>
+      <button class="ctrl-btn btn-sound" onclick="speakCurrentSentence()">🔊 문장 듣기</button>
+      <button class="ctrl-btn btn-next" onclick="nextSentence()">다음 ▶</button>
+    </div>
+
+    <div class="jump-bar" style="margin-top: 12px;">
+      <span id="sentCounterDisplay">1 / 60</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="sentProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: TABLE OF WORDS -->
+  <div id="viewListWord" class="view-container">
+    <div class="table-container">
+      <div class="table-search">
+        <input type="text" id="wordSearchInput" placeholder="단어 또는 우리말 뜻 검색 (예: boy, 사과)..." oninput="filterWordTable()">
+      </div>
+      <div style="max-height: 520px; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">No.</th>
+              <th>영단어</th>
+              <th>발음 표기</th>
+              <th>우리말 뜻</th>
+              <th style="width: 80px; text-align: center;">듣기</th>
+            </tr>
+          </thead>
+          <tbody id="wordTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 4: TABLE OF SENTENCES -->
+  <div id="viewListSent" class="view-container">
+    <div class="table-container">
+      <div class="table-search">
+        <input type="text" id="sentSearchInput" placeholder="영어 예문 또는 우리말 해석 검색..." oninput="filterSentTable()">
+      </div>
+      <div style="max-height: 520px; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">No.</th>
+              <th>영어 예문</th>
+              <th>우리말 해석</th>
+              <th style="width: 80px; text-align: center;">듣기</th>
+            </tr>
+          </thead>
+          <tbody id="sentTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts Guide -->
+  <div class="shortcuts-guide">
+    단축키: <kbd>Space</kbd> 또는 <kbd>→</kbd> 다음 | <kbd>←</kbd> 이전 | <kbd>S</kbd> 발음 듣기 | <kbd>M</kbd> 뜻 토글 | <kbd>P</kbd> 발음 토글
+  </div>
+</div>
+
+<script>
+  const ALL_WORDS = [{"no": 1, "word": "I", "ipa": "aɪ", "pron_kr": "아이", "meaning": "나는, 내가(1인칭 단수 대명사 주격)", "stage": "001-050"}, {"no": 2, "word": "am", "ipa": "æm", "pron_kr": "앰", "meaning": "~(이)다, ~(이)가 있다", "stage": "001-050"}, {"no": 3, "word": "a, an", "ipa": "ə, æn", "pron_kr": "어, 앤", "meaning": "하나의~", "stage": "001-050"}, {"no": 4, "word": "boy", "ipa": "bɔɪ", "pron_kr": "보이", "meaning": "소년", "stage": "001-050"}, {"no": 5, "word": "big", "ipa": "bɪɡ", "pron_kr": "빅", "meaning": "큰", "stage": "001-050"}, {"no": 6, "word": "girl", "ipa": "ɡɜːrl", "pron_kr": "걸", "meaning": "소녀", "stage": "001-050"}, {"no": 7, "word": "sad", "ipa": "sæd", "pron_kr": "새드", "meaning": "슬픈", "stage": "001-050"}, {"no": 8, "word": "bad", "ipa": "bæd", "pron_kr": "배드", "meaning": "나쁜", "stage": "001-050"}, {"no": 9, "word": "is", "ipa": "ɪz", "pron_kr": "이즈", "meaning": "~(이)다, ~(이)가 있다", "stage": "001-050"}, {"no": 10, "word": "one", "ipa": "wʌn", "pron_kr": "원", "meaning": "숫자 1, 하나", "stage": "001-050"}, {"no": 11, "word": "you", "ipa": "juː", "pron_kr": "유", "meaning": "너(는)/너를, 너에게", "stage": "001-050"}, {"no": 12, "word": "are", "ipa": "ɑːr", "pron_kr": "아-ㄹ", "meaning": "~(이)다, ~(이)가 있다", "stage": "001-050"}, {"no": 13, "word": "my", "ipa": "maɪ", "pron_kr": "마이", "meaning": "나의", "stage": "001-050"}, {"no": 14, "word": "friend", "ipa": "frend", "pron_kr": "프렌드", "meaning": "친구", "stage": "001-050"}, {"no": 15, "word": "good", "ipa": "ɡʊd", "pron_kr": "굿", "meaning": "좋은, 착한", "stage": "001-050"}, {"no": 16, "word": "dog", "ipa": "dɔːɡ", "pron_kr": "독", "meaning": "개", "stage": "001-050"}, {"no": 17, "word": "bed", "ipa": "bed", "pron_kr": "베드", "meaning": "침대", "stage": "001-050"}, {"no": 18, "word": "and", "ipa": "ænd", "pron_kr": "앤드", "meaning": "그리고", "stage": "001-050"}, {"no": 19, "word": "yes", "ipa": "jes", "pron_kr": "예스", "meaning": "네, 그래요", "stage": "001-050"}, {"no": 20, "word": "no", "ipa": "noʊ", "pron_kr": "노우", "meaning": "아니, 안돼/조금의 ...도 없는[아닌]", "stage": "001-050"}, {"no": 21, "word": "this", "ipa": "ðɪs", "pron_kr": "디스", "meaning": "(가까이 있는 단수를 가리켜) 이(사람), 이것", "stage": "001-050"}, {"no": 22, "word": "cat", "ipa": "kæt", "pron_kr": "캣", "meaning": "고양이", "stage": "001-050"}, {"no": 23, "word": "fat", "ipa": "fæt", "pron_kr": "팻", "meaning": "뚱뚱한", "stage": "001-050"}, {"no": 24, "word": "pen", "ipa": "pen", "pron_kr": "펜", "meaning": "(필기구) 펜", "stage": "001-050"}, {"no": 25, "word": "book", "ipa": "bʊk", "pron_kr": "북", "meaning": "책", "stage": "001-050"}, {"no": 26, "word": "bag", "ipa": "bæɡ", "pron_kr": "백", "meaning": "가방", "stage": "001-050"}, {"no": 27, "word": "look", "ipa": "lʊk", "pron_kr": "룩", "meaning": "보다 / ~해 보이다", "stage": "001-050"}, {"no": 28, "word": "at", "ipa": "æt", "pron_kr": "앳", "meaning": "~에서", "stage": "001-050"}, {"no": 29, "word": "nice", "ipa": "naɪs", "pron_kr": "나이스", "meaning": "멋진, 친절한", "stage": "001-050"}, {"no": 30, "word": "cool", "ipa": "kuːl", "pron_kr": "쿨", "meaning": "시원한 / 멋진", "stage": "001-050"}, {"no": 31, "word": "that", "ipa": "ðæt", "pron_kr": "댓", "meaning": "(멀리 있는, 이미 지칭한) / 저(사람), 저것", "stage": "001-050"}, {"no": 32, "word": "box", "ipa": "bɑːks", "pron_kr": "박스", "meaning": "상자, 박스/(...와) 권투를 하다", "stage": "001-050"}, {"no": 33, "word": "bus", "ipa": "bʌs", "pron_kr": "버스", "meaning": "버스", "stage": "001-050"}, {"no": 34, "word": "toy", "ipa": "tɔɪ", "pron_kr": "토이", "meaning": "장난감", "stage": "001-050"}, {"no": 35, "word": "sea", "ipa": "siː", "pron_kr": "씨", "meaning": "바다", "stage": "001-050"}, {"no": 36, "word": "me", "ipa": "miː", "pron_kr": "미", "meaning": "<I의 목적격> 나를/나에게", "stage": "001-050"}, {"no": 37, "word": "happy", "ipa": "ˈhæpi", "pron_kr": "해피", "meaning": "행복한, 만족한", "stage": "001-050"}, {"no": 38, "word": "cup", "ipa": "kʌp", "pron_kr": "컵", "meaning": "컵", "stage": "001-050"}, {"no": 39, "word": "up", "ipa": "ʌp", "pron_kr": "업", "meaning": "<방향,이동,위치/수준,정도가> / 위로, 위에/전부", "stage": "001-050"}, {"no": 40, "word": "leg", "ipa": "leɡ", "pron_kr": "레그", "meaning": "다리", "stage": "001-050"}, {"no": 41, "word": "he", "ipa": "hiː", "pron_kr": "히", "meaning": "그는, 그가(3인칭 단수 대명사 주격)", "stage": "001-050"}, {"no": 42, "word": "man", "ipa": "mæn", "pron_kr": "맨", "meaning": "(어른)남자, 사람", "stage": "001-050"}, {"no": 43, "word": "tall", "ipa": "tɔːl", "pron_kr": "톨", "meaning": "키가 큰, 높은", "stage": "001-050"}, {"no": 44, "word": "wet", "ipa": "wet", "pron_kr": "웻", "meaning": "젖은, 비 오는/적시다", "stage": "001-050"}, {"no": 45, "word": "young", "ipa": "jʌŋ", "pron_kr": "영", "meaning": "어린, 젊은", "stage": "001-050"}, {"no": 46, "word": "woman", "ipa": "ˈwʊmən", "pron_kr": "우먼", "meaning": "여자, 여성", "stage": "001-050"}, {"no": 47, "word": "kid", "ipa": "kɪd", "pron_kr": "키드", "meaning": "아이, 청소년 / 농담하다", "stage": "001-050"}, {"no": 48, "word": "cut", "ipa": "kʌt", "pron_kr": "컷", "meaning": "자르다,썰다/상처/삭감,감축", "stage": "001-050"}, {"no": 49, "word": "cap", "ipa": "kæp", "pron_kr": "캡", "meaning": "야구모자", "stage": "001-050"}, {"no": 50, "word": "cold", "ipa": "koʊld", "pron_kr": "콜드", "meaning": "추운, 차가운 / 감기, 추위", "stage": "001-050"}, {"no": 51, "word": "it", "ipa": "ɪt", "pron_kr": "잇", "meaning": "<3인칭 단수 대명사 주격·목적격> 그것(은)/ 그것을", "stage": "051-100"}, {"no": 52, "word": "milk", "ipa": "mɪlk", "pron_kr": "밀크", "meaning": "우유", "stage": "051-100"}, {"no": 53, "word": "water", "ipa": "ˈwɔːtər", "pron_kr": "워터", "meaning": "물(을 주다)", "stage": "051-100"}, {"no": 54, "word": "on", "ipa": "ɑːn", "pron_kr": "온", "meaning": "...(위)[에][로]/ 쭉, 다시 (계속)", "stage": "051-100"}, {"no": 55, "word": "egg", "ipa": "eɡ", "pron_kr": "에그", "meaning": "알, 계란", "stage": "051-100"}, {"no": 56, "word": "fish", "ipa": "fɪʃ", "pron_kr": "피쉬", "meaning": "물고기/ 낚시하다", "stage": "051-100"}, {"no": 57, "word": "go", "ipa": "ɡoʊ", "pron_kr": "고우", "meaning": "가다[다니다], [떠나다]/시도, 차례", "stage": "051-100"}, {"no": 58, "word": "juice", "ipa": "dʒuːs", "pron_kr": "주스", "meaning": "(과일·채소)의 즙[주스]/ 즙을 내다", "stage": "051-100"}, {"no": 59, "word": "apple", "ipa": "ˈæpl", "pron_kr": "애플", "meaning": "사과", "stage": "051-100"}, {"no": 60, "word": "fruit", "ipa": "fruːt", "pron_kr": "프루트", "meaning": "과일, 열매/ 열매를 맺다", "stage": "051-100"}, {"no": 61, "word": "she", "ipa": "ʃiː", "pron_kr": "쉬", "meaning": "<3인칭 단수 대명사 주격>그녀(는)", "stage": "051-100"}, {"no": 62, "word": "mom", "ipa": "mɑːm", "pron_kr": "맘", "meaning": "엄마", "stage": "051-100"}, {"no": 63, "word": "kind", "ipa": "kaɪnd", "pron_kr": "카인드", "meaning": "친절한, 착한", "stage": "051-100"}, {"no": 64, "word": "baby", "ipa": "ˈbeɪbi", "pron_kr": "베이비", "meaning": "아기", "stage": "051-100"}, {"no": 65, "word": "dad", "ipa": "dæd", "pron_kr": "대드", "meaning": "아빠", "stage": "051-100"}, {"no": 66, "word": "cute", "ipa": "kjuːt", "pron_kr": "큐트", "meaning": "귀여운", "stage": "051-100"}, {"no": 67, "word": "your", "ipa": "jɔːr", "pron_kr": "유어", "meaning": "<you의 소유격>너의, 너희(들)의", "stage": "051-100"}, {"no": 68, "word": "foot", "ipa": "fʊt", "pron_kr": "풋", "meaning": "발 1개/ 맨 아래 부분", "stage": "051-100"}, {"no": 69, "word": "home", "ipa": "hoʊm", "pron_kr": "홈", "meaning": "집[가정](의)/ 집에[으로]", "stage": "051-100"}, {"no": 70, "word": "hat", "ipa": "hæt", "pron_kr": "햇", "meaning": "모자", "stage": "051-100"}, {"no": 71, "word": "the", "ipa": "ðə", "pron_kr": "더", "meaning": "(바로)그", "stage": "051-100"}, {"no": 72, "word": "room", "ipa": "ruːm", "pron_kr": "룸", "meaning": "방, 공간; 여지", "stage": "051-100"}, {"no": 73, "word": "warm", "ipa": "wɔːrm", "pron_kr": "웜", "meaning": "따뜻한/따뜻하게/데우다[데워지다]", "stage": "051-100"}, {"no": 74, "word": "door", "ipa": "dɔːr", "pron_kr": "도어", "meaning": "문", "stage": "051-100"}, {"no": 75, "word": "small", "ipa": "smɔːl", "pron_kr": "스몰", "meaning": "작은[적은], 어린, 작게", "stage": "051-100"}, {"no": 76, "word": "chair", "ipa": "tʃer", "pron_kr": "체어", "meaning": "의자", "stage": "051-100"}, {"no": 77, "word": "soft", "ipa": "sɔːft", "pron_kr": "소프트", "meaning": "부드러운, 폭신한, 은은한[연한]", "stage": "051-100"}, {"no": 78, "word": "hard", "ipa": "hɑːrd", "pron_kr": "하드", "meaning": "어려운[힘든/곤란한]", "stage": "051-100"}, {"no": 79, "word": "yellow", "ipa": "ˈjeloʊ", "pron_kr": "옐로우", "meaning": "노란색(의)", "stage": "051-100"}, {"no": 80, "word": "great", "ipa": "ɡreɪt", "pron_kr": "그레이트", "meaning": "정말 좋은, 대단한, 위대한", "stage": "051-100"}, {"no": 81, "word": "hungry", "ipa": "ˈhʌŋɡri", "pron_kr": "헝그리", "meaning": "배고픈, 굶주린", "stage": "051-100"}, {"no": 82, "word": "now", "ipa": "naʊ", "pron_kr": "나우", "meaning": "지금[이제](부터)", "stage": "051-100"}, {"no": 83, "word": "ready", "ipa": "ˈredi", "pron_kr": "레디", "meaning": "준비가 된[완성된]/ 준비[대비]시키다", "stage": "051-100"}, {"no": 84, "word": "put", "ipa": "pʊt", "pron_kr": "풋", "meaning": "놓다 / 넣다", "stage": "051-100"}, {"no": 85, "word": "sure", "ipa": "ʃʊr", "pron_kr": "슈어", "meaning": "확신하는, 물론 [반드시 - 할일]", "stage": "051-100"}, {"no": 86, "word": "angry", "ipa": "ˈæŋɡri", "pron_kr": "앵그리", "meaning": "화난, 성난", "stage": "051-100"}, {"no": 87, "word": "drink", "ipa": "drɪŋk", "pron_kr": "드링크", "meaning": "마시다/ 음료", "stage": "051-100"}, {"no": 88, "word": "green", "ipa": "ɡriːn", "pron_kr": "그린", "meaning": "녹색(의), 푸른", "stage": "051-100"}, {"no": 89, "word": "two", "ipa": "tuː", "pron_kr": "투", "meaning": "숫자2, 둘", "stage": "051-100"}, {"no": 90, "word": "three", "ipa": "θriː", "pron_kr": "쓰리", "meaning": "숫자 3, 셋", "stage": "051-100"}, {"no": 91, "word": "dry", "ipa": "draɪ", "pron_kr": "드라이", "meaning": "마른, 건조한/ 말리다[마르다]", "stage": "051-100"}, {"no": 92, "word": "lamp", "ipa": "læmp", "pron_kr": "램프", "meaning": "램프, 전등", "stage": "051-100"}, {"no": 93, "word": "old", "ipa": "oʊld", "pron_kr": "올드", "meaning": "나이가 ...인/ 낡은, 늙은", "stage": "051-100"}, {"no": 94, "word": "bread", "ipa": "bred", "pron_kr": "브레드", "meaning": "빵", "stage": "051-100"}, {"no": 95, "word": "table", "ipa": "ˈteɪbl", "pron_kr": "테이블", "meaning": "식탁", "stage": "051-100"}, {"no": 96, "word": "under", "ipa": "ˈʌndər", "pron_kr": "언더", "meaning": "~아래에[로], ...미만의", "stage": "051-100"}, {"no": 97, "word": "face", "ipa": "feɪs", "pron_kr": "페이스", "meaning": "얼굴(표정), 표면/ 직면하다 ...을 마주보다[향하다]", "stage": "051-100"}, {"no": 98, "word": "ant", "ipa": "ænt", "pron_kr": "앤트", "meaning": "개미", "stage": "051-100"}, {"no": 99, "word": "four", "ipa": "fɔːr", "pron_kr": "포어", "meaning": "숫자 4, 넷", "stage": "051-100"}, {"no": 100, "word": "five", "ipa": "faɪv", "pron_kr": "파이브", "meaning": "숫자 5, 다섯", "stage": "051-100"}, {"no": 101, "word": "bird", "ipa": "bɜːrd", "pron_kr": "버드", "meaning": "새", "stage": "101-150"}, {"no": 102, "word": "jump", "ipa": "dʒʌmp", "pron_kr": "점프", "meaning": "뛰어오르다, 급증[급등]하다/뜀질[점프]", "stage": "101-150"}, {"no": 103, "word": "blue", "ipa": "bluː", "pron_kr": "블루", "meaning": "파란(색)", "stage": "101-150"}, {"no": 104, "word": "sky", "ipa": "skaɪ", "pron_kr": "스카이", "meaning": "하늘", "stage": "101-150"}, {"no": 105, "word": "tree", "ipa": "triː", "pron_kr": "트리", "meaning": "나무", "stage": "101-150"}, {"no": 106, "word": "flower", "ipa": "ˈflaʊər", "pron_kr": "플라워", "meaning": "꽃", "stage": "101-150"}, {"no": 107, "word": "in", "ipa": "ɪn", "pron_kr": "인", "meaning": "…에[에서/안에]", "stage": "101-150"}, {"no": 108, "word": "fast", "ipa": "fæst", "pron_kr": "패스트", "meaning": "빠른, 빠르게", "stage": "101-150"}, {"no": 109, "word": "slow", "ipa": "sloʊ", "pron_kr": "슬로우", "meaning": "느린", "stage": "101-150"}, {"no": 110, "word": "white", "ipa": "waɪt", "pron_kr": "화이트", "meaning": "흰(색)", "stage": "101-150"}, {"no": 111, "word": "we", "ipa": "wiː", "pron_kr": "위", "meaning": "<1인칭 복수 대명사 주격> 우리[저희]가", "stage": "101-150"}, {"no": 112, "word": "student", "ipa": "ˈstuːdnt", "pron_kr": "스튜던트", "meaning": "학생", "stage": "101-150"}, {"no": 113, "word": "busy", "ipa": "ˈbɪzi", "pron_kr": "비지", "meaning": "(~하는라) 바쁜, 붐비는", "stage": "101-150"}, {"no": 114, "word": "school", "ipa": "skuːl", "pron_kr": "스쿨", "meaning": "학교", "stage": "101-150"}, {"no": 115, "word": "class", "ipa": "klæs", "pron_kr": "클래스", "meaning": "학급[반], 수업/ 사회의 계층", "stage": "101-150"}, {"no": 116, "word": "teacher", "ipa": "ˈtiːtʃər", "pron_kr": "티처", "meaning": "선생님", "stage": "101-150"}, {"no": 117, "word": "late", "ipa": "leɪt", "pron_kr": "레이트", "meaning": "늦은, 늦게", "stage": "101-150"}, {"no": 118, "word": "sorry", "ipa": "ˈsɔːri", "pron_kr": "쏘리", "meaning": "미안한, 안쓰러운, 유감스러운", "stage": "101-150"}, {"no": 119, "word": "six", "ipa": "sɪks", "pron_kr": "식스", "meaning": "숫자 6, 여섯", "stage": "101-150"}, {"no": 120, "word": "seven", "ipa": "ˈsevn", "pron_kr": "세븐", "meaning": "숫자 7, 일곱", "stage": "101-150"}, {"no": 121, "word": "cook", "ipa": "kʊk", "pron_kr": "쿡", "meaning": "요리사/ 요리하다", "stage": "101-150"}, {"no": 122, "word": "long", "ipa": "lɔːŋ", "pron_kr": "롱", "meaning": "긴, 길이[거리]가 ...인/ 오래", "stage": "101-150"}, {"no": 123, "word": "close", "ipa": "kloʊs", "pron_kr": "클로즈", "meaning": "(문•커튼 등을) 닫다[닫히다/치다] / (눈•책•우산 등을) 감다[덮다/접다]", "stage": "101-150"}, {"no": 124, "word": "very", "ipa": "ˈveri", "pron_kr": "베리", "meaning": "아주, 정말/ 바로/ 맨(가장)", "stage": "101-150"}, {"no": 125, "word": "eye", "ipa": "aɪ", "pron_kr": "아이", "meaning": "눈", "stage": "101-150"}, {"no": 126, "word": "nose", "ipa": "noʊz", "pron_kr": "노우즈", "meaning": "코", "stage": "101-150"}, {"no": 127, "word": "mouth", "ipa": "maʊθ", "pron_kr": "마우스", "meaning": "입", "stage": "101-150"}, {"no": 128, "word": "head", "ipa": "hed", "pron_kr": "헤드", "meaning": "머리/ (특정 방향으로)가다[향하다, 이끌다]", "stage": "101-150"}, {"no": 129, "word": "ear", "ipa": "ɪr", "pron_kr": "이어", "meaning": "귀", "stage": "101-150"}, {"no": 130, "word": "arm", "ipa": "ɑːrm", "pron_kr": "암", "meaning": "팔", "stage": "101-150"}, {"no": 131, "word": "sweet", "ipa": "swiːt", "pron_kr": "스위트", "meaning": "달콤한 / 다정한", "stage": "101-150"}, {"no": 132, "word": "house", "ipa": "haʊs", "pron_kr": "하우스", "meaning": "집, 주택", "stage": "101-150"}, {"no": 133, "word": "clean", "ipa": "kliːn", "pron_kr": "클린", "meaning": "깨끗한/ (깨끗이) 닦다, 청소하다", "stage": "101-150"}, {"no": 134, "word": "shirt", "ipa": "ʃɜːrt", "pron_kr": "셔츠", "meaning": "셔츠", "stage": "101-150"}, {"no": 135, "word": "shoe", "ipa": "ʃuː", "pron_kr": "슈", "meaning": "신발", "stage": "101-150"}, {"no": 136, "word": "wear", "ipa": "wer", "pron_kr": "웨어", "meaning": "(옷·모자·장갑·신발·장신구 등을)입고·착용하고 있다/ 복, 착용", "stage": "101-150"}, {"no": 137, "word": "stay", "ipa": "steɪ", "pron_kr": "스테이", "meaning": "계속 있다, 머무르다/ 머무름, 방문", "stage": "101-150"}, {"no": 138, "word": "new", "ipa": "nuː", "pron_kr": "뉴", "meaning": "새, 새로운", "stage": "101-150"}, {"no": 139, "word": "hard", "ipa": "hɑːrd", "pron_kr": "하드", "meaning": "단단한, 굳은, 딱딱한/열심히, 세게, 힘껏", "stage": "101-150"}, {"no": 140, "word": "eight", "ipa": "eɪt", "pron_kr": "에이트", "meaning": "숫자 8, 여덟", "stage": "101-150"}, {"no": 141, "word": "red", "ipa": "red", "pron_kr": "레드", "meaning": "빨강, 빨간", "stage": "101-150"}, {"no": 142, "word": "car", "ipa": "kɑːr", "pron_kr": "카", "meaning": "자동차", "stage": "101-150"}, {"no": 143, "word": "call", "ipa": "kɔːl", "pron_kr": "콜", "meaning": "전화하다 /(...라고)부르다[외치다]", "stage": "101-150"}, {"no": 144, "word": "bike", "ipa": "baɪk", "pron_kr": "바이크", "meaning": "자전거", "stage": "101-150"}, {"no": 145, "word": "train", "ipa": "treɪn", "pron_kr": "트레인", "meaning": "기차/ 훈련시키다, 훈련받다", "stage": "101-150"}, {"no": 146, "word": "wait", "ipa": "weɪt", "pron_kr": "웨이트", "meaning": "기다리다[대기하다] / 기다림", "stage": "101-150"}, {"no": 147, "word": "park", "ipa": "pɑːrk", "pron_kr": "파크", "meaning": "공원", "stage": "101-150"}, {"no": 148, "word": "zoo", "ipa": "zuː", "pron_kr": "주", "meaning": "동물원", "stage": "101-150"}, {"no": 149, "word": "stop", "ipa": "stɑːp", "pron_kr": "스탑", "meaning": "멈추다/ 정지, 정류장", "stage": "101-150"}, {"no": 150, "word": "nine", "ipa": "naɪn", "pron_kr": "나인", "meaning": "숫자 9, 아홉", "stage": "101-150"}, {"no": 151, "word": "have", "ipa": "hæv", "pron_kr": "해브", "meaning": "먹다/ 가지고 있다", "stage": "151-200"}, {"no": 152, "word": "money", "ipa": "ˈmʌni", "pron_kr": "머니", "meaning": "돈", "stage": "151-200"}, {"no": 153, "word": "hi", "ipa": "haɪ", "pron_kr": "하이", "meaning": "안녕(인사)", "stage": "151-200"}, {"no": 154, "word": "time", "ipa": "taɪm", "pron_kr": "타임", "meaning": "시간, 때(번)", "stage": "151-200"}, {"no": 155, "word": "some", "ipa": "sʌm", "pron_kr": "썸", "meaning": "조금[몇몇의/일부의]/어떤 / 약[…정도]", "stage": "151-200"}, {"no": 156, "word": "all", "ipa": "ɔːl", "pron_kr": "올", "meaning": "모든[전부]/ 완전히", "stage": "151-200"}, {"no": 157, "word": "many", "ipa": "ˈmeni", "pron_kr": "매니", "meaning": "많은 (셀 수 있을 때)", "stage": "151-200"}, {"no": 158, "word": "lose", "ipa": "luːz", "pron_kr": "루즈", "meaning": "지다, 잃다", "stage": "151-200"}, {"no": 159, "word": "win", "ipa": "wɪn", "pron_kr": "윈", "meaning": "이기다,획득하다", "stage": "151-200"}, {"no": 160, "word": "ten", "ipa": "ten", "pron_kr": "텐", "meaning": "숫자 10, 열", "stage": "151-200"}, {"no": 161, "word": "they", "ipa": "ðeɪ", "pron_kr": "데이", "meaning": "<3인칭 복수 대명사 주격> 그들(은)", "stage": "151-200"}, {"no": 162, "word": "bear", "ipa": "ber", "pron_kr": "베어", "meaning": "곰", "stage": "151-200"}, {"no": 163, "word": "stand", "ipa": "stænd", "pron_kr": "스탠드", "meaning": "일어서다/ 참다, 견디다/ 태도", "stage": "151-200"}, {"no": 164, "word": "strong", "ipa": "strɔːŋ", "pron_kr": "스트롱", "meaning": "힘이 센, 강한", "stage": "151-200"}, {"no": 165, "word": "lion", "ipa": "ˈlaɪən", "pron_kr": "라이언", "meaning": "사자", "stage": "151-200"}, {"no": 166, "word": "tiger", "ipa": "ˈtaɪɡər", "pron_kr": "타이거", "meaning": "호랑이", "stage": "151-200"}, {"no": 167, "word": "cow", "ipa": "kaʊ", "pron_kr": "카우", "meaning": "소", "stage": "151-200"}, {"no": 168, "word": "pig", "ipa": "pɪɡ", "pron_kr": "피그", "meaning": "돼지", "stage": "151-200"}, {"no": 169, "word": "horse", "ipa": "hɔːrs", "pron_kr": "호스", "meaning": "말", "stage": "151-200"}, {"no": 170, "word": "mouse", "ipa": "maʊs", "pron_kr": "마우스", "meaning": "쥐", "stage": "151-200"}, {"no": 171, "word": "fly", "ipa": "flaɪ", "pron_kr": "플라이", "meaning": "날다, 비행하다/ 파리", "stage": "151-200"}, {"no": 172, "word": "high", "ipa": "haɪ", "pron_kr": "하이", "meaning": "높은, 높게", "stage": "151-200"}, {"no": 173, "word": "sing", "ipa": "sɪŋ", "pron_kr": "싱", "meaning": "노래하다", "stage": "151-200"}, {"no": 174, "word": "walk", "ipa": "wɔːk", "pron_kr": "워크", "meaning": "걷다/ 산책", "stage": "151-200"}, {"no": 175, "word": "swim", "ipa": "swɪm", "pron_kr": "스윔", "meaning": "수영(하다)", "stage": "151-200"}, {"no": 176, "word": "bee", "ipa": "biː", "pron_kr": "비", "meaning": "벌", "stage": "151-200"}, {"no": 177, "word": "moon", "ipa": "muːn", "pron_kr": "문", "meaning": "달", "stage": "151-200"}, {"no": 178, "word": "star", "ipa": "stɑːr", "pron_kr": "스타", "meaning": "별/ (가수·배우·운동선수 등) 스타", "stage": "151-200"}, {"no": 179, "word": "road", "ipa": "roʊd", "pron_kr": "로드", "meaning": "도로[길]", "stage": "151-200"}, {"no": 180, "word": "run", "ipa": "rʌn", "pron_kr": "런", "meaning": "달리다[뛰다]/ 달리기", "stage": "151-200"}, {"no": 181, "word": "sun", "ipa": "sʌn", "pron_kr": "썬", "meaning": "해, 태양, 햇볕", "stage": "151-200"}, {"no": 182, "word": "every", "ipa": "ˈevri", "pron_kr": "에브리", "meaning": "모든(매)", "stage": "151-200"}, {"no": 183, "word": "day", "ipa": "deɪ", "pron_kr": "데이", "meaning": "날, 하루", "stage": "151-200"}, {"no": 184, "word": "hole", "ipa": "hoʊl", "pron_kr": "홀", "meaning": "구멍, 구덩이", "stage": "151-200"}, {"no": 185, "word": "ink", "ipa": "ɪŋk", "pron_kr": "잉크", "meaning": "잉크", "stage": "151-200"}, {"no": 186, "word": "bin", "ipa": "bɪn", "pron_kr": "빈", "meaning": "통, 휴지통 / 버리다", "stage": "151-200"}, {"no": 187, "word": "for", "ipa": "fɔːr", "pron_kr": "포어", "meaning": "...을 위해(하려)", "stage": "151-200"}, {"no": 188, "word": "like", "ipa": "laɪk", "pron_kr": "라이크", "meaning": "좋아하다", "stage": "151-200"}, {"no": 189, "word": "love", "ipa": "lʌv", "pron_kr": "러브", "meaning": "사랑(하다)", "stage": "151-200"}, {"no": 190, "word": "work", "ipa": "wɜːrk", "pron_kr": "워크", "meaning": "일하다(노력하다)/ 일, 직장, 직업", "stage": "151-200"}, {"no": 191, "word": "dinner", "ipa": "ˈdɪnər", "pron_kr": "디너", "meaning": "저녁 식사", "stage": "151-200"}, {"no": 192, "word": "lunch", "ipa": "lʌntʃ", "pron_kr": "런치", "meaning": "점심 식사", "stage": "151-200"}, {"no": 193, "word": "meat", "ipa": "miːt", "pron_kr": "미트", "meaning": "고기", "stage": "151-200"}, {"no": 194, "word": "make", "ipa": "meɪk", "pron_kr": "메이크", "meaning": "만들다", "stage": "151-200"}, {"no": 195, "word": "city", "ipa": "ˈsɪti", "pron_kr": "시티", "meaning": "시, 도시", "stage": "151-200"}, {"no": 196, "word": "need", "ipa": "niːd", "pron_kr": "니드", "meaning": "필요로 하다/ 필요성, 욕구", "stage": "151-200"}, {"no": 197, "word": "come", "ipa": "kʌm", "pron_kr": "컴", "meaning": "오다", "stage": "151-200"}, {"no": 198, "word": "rice", "ipa": "raɪs", "pron_kr": "라이스", "meaning": "밥, 쌀, 벼", "stage": "151-200"}, {"no": 199, "word": "eat", "ipa": "iːt", "pron_kr": "잇", "meaning": "먹다, 식사하다", "stage": "151-200"}, {"no": 200, "word": "thin", "ipa": "θɪn", "pron_kr": "씬", "meaning": "얇은, 날씬한, (액체가) 묽은", "stage": "151-200"}, {"no": 201, "word": "together", "ipa": "təˈɡeðər", "pron_kr": "투게더", "meaning": "함께, 같이, 동시에", "stage": "201-250"}, {"no": 202, "word": "game", "ipa": "ɡeɪm", "pron_kr": "게임", "meaning": "게임, 놀이, 시합", "stage": "201-250"}, {"no": 203, "word": "play", "ipa": "pleɪ", "pron_kr": "플레이", "meaning": "놀다, 경기[시합/게임/놀이]를 하다 / / 놀이, 경기(진행)", "stage": "201-250"}, {"no": 204, "word": "mad", "ipa": "mæd", "pron_kr": "매드", "meaning": "몹시 화가 난, 미친", "stage": "201-250"}, {"no": 205, "word": "know", "ipa": "noʊ", "pron_kr": "노우", "meaning": "알다, 깨닫다", "stage": "201-250"}, {"no": 206, "word": "sound", "ipa": "saʊnd", "pron_kr": "사운드", "meaning": "소리 / ...처럼 들리다", "stage": "201-250"}, {"no": 207, "word": "voice", "ipa": "vɔɪs", "pron_kr": "보이스", "meaning": "목소리", "stage": "201-250"}, {"no": 208, "word": "draw", "ipa": "drɔː", "pron_kr": "드로우", "meaning": "그리다/ 당기다", "stage": "201-250"}, {"no": 209, "word": "see", "ipa": "siː", "pron_kr": "씨", "meaning": "보다, 만나다, (보고) 알다", "stage": "201-250"}, {"no": 210, "word": "watch", "ipa": "wɑːtʃ", "pron_kr": "와치", "meaning": "보다/ 감시/ 시계", "stage": "201-250"}, {"no": 211, "word": "loud", "ipa": "laʊd", "pron_kr": "라우드", "meaning": "(소리가) 큰, 시끄러운", "stage": "201-250"}, {"no": 212, "word": "jam", "ipa": "dʒæm", "pron_kr": "잼", "meaning": "잼", "stage": "201-250"}, {"no": 213, "word": "song", "ipa": "sɔːŋ", "pron_kr": "송", "meaning": "노래", "stage": "201-250"}, {"no": 214, "word": "get", "ipa": "ɡet", "pron_kr": "겟", "meaning": "받다, 얻다/ 가져오다/ ...이[가] 되다", "stage": "201-250"}, {"no": 215, "word": "cake", "ipa": "keɪk", "pron_kr": "케이크", "meaning": "케이크, 빵[떡/튀김]", "stage": "201-250"}, {"no": 216, "word": "write", "ipa": "raɪt", "pron_kr": "라이트", "meaning": "(글자·숫자를) 쓰다[작성하다]", "stage": "201-250"}, {"no": 217, "word": "hear", "ipa": "hɪr", "pron_kr": "히어", "meaning": "듣다, 들리다", "stage": "201-250"}, {"no": 218, "word": "picture", "ipa": "ˈpɪktʃər", "pron_kr": "픽처", "meaning": "그림 / 사진", "stage": "201-250"}, {"no": 219, "word": "music", "ipa": "ˈmjuːzɪk", "pron_kr": "뮤직", "meaning": "음악", "stage": "201-250"}, {"no": 220, "word": "think", "ipa": "θɪŋk", "pron_kr": "띵크", "meaning": "생각하다", "stage": "201-250"}, {"no": 221, "word": "study", "ipa": "ˈstʌdi", "pron_kr": "스터디", "meaning": "공부[연구](하다)", "stage": "201-250"}, {"no": 222, "word": "learn", "ipa": "lɜːrn", "pron_kr": "런", "meaning": "배우다", "stage": "201-250"}, {"no": 223, "word": "fun", "ipa": "fʌn", "pron_kr": "펀", "meaning": "재미, 장난/ 재미있는", "stage": "201-250"}, {"no": 224, "word": "story", "ipa": "ˈstɔːri", "pron_kr": "스토리", "meaning": "이야기, 줄거리", "stage": "201-250"}, {"no": 225, "word": "candy", "ipa": "ˈkændi", "pron_kr": "캔디", "meaning": "사탕", "stage": "201-250"}, {"no": 226, "word": "cookie", "ipa": "ˈkʊki", "pron_kr": "쿠키", "meaning": "쿠키", "stage": "201-250"}, {"no": 227, "word": "show", "ipa": "ʃoʊ", "pron_kr": "쇼", "meaning": "보여 주다[증명하다] / / 공연물, 전시(회)", "stage": "201-250"}, {"no": 228, "word": "find", "ipa": "faɪnd", "pron_kr": "파인드", "meaning": "찾다[발견하다]/ ...라고 여기다[생각하다]", "stage": "201-250"}, {"no": 229, "word": "read", "ipa": "riːd", "pron_kr": "리드", "meaning": "읽다/ 독서", "stage": "201-250"}, {"no": 230, "word": "far", "ipa": "fɑːr", "pron_kr": "파", "meaning": "먼, 멀리/ 훨씬", "stage": "201-250"}, {"no": 231, "word": "want", "ipa": "wɑːnt", "pron_kr": "원트", "meaning": "원하다, 바라다/ 원하는 [필요한] 것", "stage": "201-250"}, {"no": 232, "word": "town", "ipa": "taʊn", "pron_kr": "타운", "meaning": "(소)도시/ 시내, 번화가", "stage": "201-250"}, {"no": 233, "word": "tell", "ipa": "tel", "pron_kr": "텔", "meaning": "말하다, (말·글로) 알리다[알다]", "stage": "201-250"}, {"no": 234, "word": "near", "ipa": "nɪr", "pron_kr": "니어", "meaning": "(시간적·공간적으로/ 사이가) 가까운, 친(밀)한/ 가까이", "stage": "201-250"}, {"no": 235, "word": "tea", "ipa": "tiː", "pron_kr": "티", "meaning": "(마시는) 차", "stage": "201-250"}, {"no": 236, "word": "open", "ipa": "ˈoʊpən", "pron_kr": "오픈", "meaning": "(문 등이) 개방된, 펼쳐진/ 열다", "stage": "201-250"}, {"no": 237, "word": "close", "ipa": "kloʊs", "pron_kr": "클로즈", "meaning": "가까운, 친(밀)한/ 닫다[닫히다]", "stage": "201-250"}, {"no": 238, "word": "push", "ipa": "pʊʃ", "pron_kr": "푸시", "meaning": "밀다, 누르다/ 밀기", "stage": "201-250"}, {"no": 239, "word": "pull", "ipa": "pʊl", "pron_kr": "풀", "meaning": "끌다, 당기다, 뽑다/ 끌어[잡아]당기기", "stage": "201-250"}, {"no": 240, "word": "hot", "ipa": "hɑːt", "pron_kr": "핫", "meaning": "더운, 뜨거운/ (맛이) 매운", "stage": "201-250"}, {"no": 241, "word": "give", "ipa": "ɡɪv", "pron_kr": "기브", "meaning": "주다, 제공하다", "stage": "201-250"}, {"no": 242, "word": "bring", "ipa": "brɪŋ", "pron_kr": "브링", "meaning": "가져오다, 데려오다", "stage": "201-250"}, {"no": 243, "word": "carry", "ipa": "ˈkæri", "pron_kr": "캐리", "meaning": "들고[데리고] 있다, 나르다[옮기다]", "stage": "201-250"}, {"no": 244, "word": "use", "ipa": "juːz", "pron_kr": "유즈", "meaning": "사용[이용]하다/ 사용, 이용", "stage": "201-250"}, {"no": 245, "word": "hill", "ipa": "hɪl", "pron_kr": "힐", "meaning": "언덕, 경사로", "stage": "201-250"}, {"no": 246, "word": "here", "ipa": "hɪr", "pron_kr": "히어", "meaning": "여기[에/에서/로]/지금, / 이 시점[순간]에", "stage": "201-250"}, {"no": 247, "word": "live", "ipa": "lɪv", "pron_kr": "리브", "meaning": "살다[생존하다], 거주하다", "stage": "201-250"}, {"no": 248, "word": "ask", "ipa": "æsk", "pron_kr": "애스크", "meaning": "묻다 / 부탁하다", "stage": "201-250"}, {"no": 249, "word": "send", "ipa": "send", "pron_kr": "샌드", "meaning": "보내다[전하다]", "stage": "201-250"}, {"no": 250, "word": "try", "ipa": "traɪ", "pron_kr": "트라이", "meaning": "노력하다, 시도(하다)", "stage": "201-250"}, {"no": 251, "word": "funny", "ipa": "ˈfʌni", "pron_kr": "퍼니", "meaning": "우스운, 재미있는, 괴상한", "stage": "251-300"}, {"no": 252, "word": "turn", "ipa": "tɜːrn", "pron_kr": "턴", "meaning": "돌다(돌리다)/ 회전, 모퉁이", "stage": "251-300"}, {"no": 253, "word": "move", "ipa": "muːv", "pron_kr": "무브", "meaning": "움직이다, 옮기다(이사하다) / / 행동, 조치", "stage": "251-300"}, {"no": 254, "word": "so", "ipa": "soʊ", "pron_kr": "쏘우", "meaning": "너무, 정말/ 그래서, [...해서]", "stage": "251-300"}, {"no": 255, "word": "pick", "ipa": "pɪk", "pron_kr": "픽", "meaning": "고르다, 뽑다(과일, 꽃을) 따다, 꺾다", "stage": "251-300"}, {"no": 256, "word": "throw", "ipa": "θroʊ", "pron_kr": "쓰로우", "meaning": "던지다", "stage": "251-300"}, {"no": 257, "word": "touch", "ipa": "tʌtʃ", "pron_kr": "터치", "meaning": "만지다(건드리다)/ 촉각, 손길", "stage": "251-300"}, {"no": 258, "word": "thank", "ipa": "θæŋk", "pron_kr": "땡크", "meaning": "고맙다", "stage": "251-300"}, {"no": 259, "word": "bye", "ipa": "baɪ", "pron_kr": "바이", "meaning": "안녕(헤어질 때)", "stage": "251-300"}, {"no": 260, "word": "much", "ipa": "mʌtʃ", "pron_kr": "머치", "meaning": "많이(셀 수 없을 때)", "stage": "251-300"}, {"no": 261, "word": "smile", "ipa": "smaɪl", "pron_kr": "스마일", "meaning": "미소(짓다)", "stage": "251-300"}, {"no": 262, "word": "hit", "ipa": "hɪt", "pron_kr": "힛", "meaning": "치다, 때리다", "stage": "251-300"}, {"no": 263, "word": "keep", "ipa": "kiːp", "pron_kr": "킵", "meaning": "유지하다", "stage": "251-300"}, {"no": 264, "word": "sit", "ipa": "sɪt", "pron_kr": "싯", "meaning": "앉다", "stage": "251-300"}, {"no": 265, "word": "there", "ipa": "ðer", "pron_kr": "데어", "meaning": "거기에[에서], 그곳에[에서]", "stage": "251-300"}, {"no": 266, "word": "down", "ipa": "daʊn", "pron_kr": "다운", "meaning": "아래로", "stage": "251-300"}, {"no": 267, "word": "brush", "ipa": "brʌʃ", "pron_kr": "브러쉬", "meaning": "닦다/ 빗, (칫)솔", "stage": "251-300"}, {"no": 268, "word": "tooth", "ipa": "tuːθ", "pron_kr": "투스", "meaning": "이, 이빨 1개", "stage": "251-300"}, {"no": 269, "word": "feel", "ipa": "fiːl", "pron_kr": "필", "meaning": "느끼다/ 느껴지다", "stage": "251-300"}, {"no": 270, "word": "short", "ipa": "ʃɔːrt", "pron_kr": "쇼트", "meaning": "키작은 / 짧은", "stage": "251-300"}, {"no": 271, "word": "listen", "ipa": "ˈlɪsn", "pron_kr": "리슨", "meaning": "듣다, 귀 기울이다 / 듣기, 경청", "stage": "251-300"}, {"no": 272, "word": "hand", "ipa": "hænd", "pron_kr": "핸드", "meaning": "손", "stage": "251-300"}, {"no": 273, "word": "smell", "ipa": "smel", "pron_kr": "스멜", "meaning": "냄새 맡다", "stage": "251-300"}, {"no": 274, "word": "wash", "ipa": "wɑːʃ", "pron_kr": "와시", "meaning": "씻다", "stage": "251-300"}, {"no": 275, "word": "hold", "ipa": "hoʊld", "pron_kr": "홀드", "meaning": "쥐다(잡다), 들고 있다, 유지하다", "stage": "251-300"}, {"no": 276, "word": "river", "ipa": "ˈrɪvər", "pron_kr": "리버", "meaning": "강", "stage": "251-300"}, {"no": 277, "word": "lake", "ipa": "leɪk", "pron_kr": "레이크", "meaning": "호수", "stage": "251-300"}, {"no": 278, "word": "with", "ipa": "wɪð", "pron_kr": "위드", "meaning": "...와 함께/ ...을 가진/ ...로, ...을 써서(이용하여)", "stage": "251-300"}, {"no": 279, "word": "cloud", "ipa": "klaʊd", "pron_kr": "클라우드", "meaning": "구름", "stage": "251-300"}, {"no": 280, "word": "soap", "ipa": "soʊp", "pron_kr": "소프", "meaning": "비누", "stage": "251-300"}, {"no": 281, "word": "hop", "ipa": "hɑːp", "pron_kr": "홉", "meaning": "깡충 뛰기 / 깡충 뛰다", "stage": "251-300"}, {"no": 282, "word": "help", "ipa": "help", "pron_kr": "헬프", "meaning": "도와주다/ 도움[지원]", "stage": "251-300"}, {"no": 283, "word": "dress", "ipa": "dres", "pron_kr": "드레스", "meaning": "원피스", "stage": "251-300"}, {"no": 284, "word": "ride", "ipa": "raɪd", "pron_kr": "라이드", "meaning": "(자전거•스케이트•오토바이 등을) 타다 [몰다] / 길(여정)", "stage": "251-300"}, {"no": 285, "word": "drive", "ipa": "draɪv", "pron_kr": "드라이브", "meaning": "운전하다/ 자동차 주행", "stage": "251-300"}, {"no": 286, "word": "climb", "ipa": "klaɪm", "pron_kr": "클라임", "meaning": "오르다, 등산하다/ 등산[등반]", "stage": "251-300"}, {"no": 287, "word": "dig", "ipa": "dɪɡ", "pron_kr": "디그", "meaning": "(땅•구멍을)파다[캐다]", "stage": "251-300"}, {"no": 288, "word": "hide", "ipa": "haɪd", "pron_kr": "하이드", "meaning": "숨다 / 숨기다", "stage": "251-300"}, {"no": 289, "word": "please", "ipa": "pliːz", "pron_kr": "플리즈", "meaning": "제발, 부탁해요", "stage": "251-300"}, {"no": 290, "word": "kick", "ipa": "kɪk", "pron_kr": "킥", "meaning": "(발로)뻗다[차다]/ 발길질", "stage": "251-300"}, {"no": 291, "word": "catch", "ipa": "kætʃ", "pron_kr": "캐치", "meaning": "잡다(받다)/잡기", "stage": "251-300"}, {"no": 292, "word": "ball", "ipa": "bɔːl", "pron_kr": "볼", "meaning": "공, 덩이, 뭉치", "stage": "251-300"}, {"no": 293, "word": "neck", "ipa": "nek", "pron_kr": "넥", "meaning": "목", "stage": "251-300"}, {"no": 294, "word": "take", "ipa": "teɪk", "pron_kr": "테이크", "meaning": "가져가다, 데리고 가다, 잡다", "stage": "251-300"}, {"no": 295, "word": "sell", "ipa": "sel", "pron_kr": "셀", "meaning": "팔다", "stage": "251-300"}, {"no": 296, "word": "buy", "ipa": "baɪ", "pron_kr": "바이", "meaning": "사다", "stage": "251-300"}, {"no": 297, "word": "do", "ipa": "duː", "pron_kr": "두", "meaning": "하다", "stage": "251-300"}, {"no": 298, "word": "black", "ipa": "blæk", "pron_kr": "블랙", "meaning": "검은(색), 어두운(색)", "stage": "251-300"}, {"no": 299, "word": "fine", "ipa": "faɪn", "pron_kr": "파인", "meaning": "좋은, 괜찮은/잘", "stage": "251-300"}, {"no": 300, "word": "dirty", "ipa": "ˈdɜːrti", "pron_kr": "더티", "meaning": "더러운, 지저분한/더럽히다", "stage": "251-300"}];
+  const ALL_SENTENCES = [{"no": 1, "en": "I am a boy.", "ko": "나는 소년이다.", "stage": "001-050"}, {"no": 2, "en": "I am a big boy.", "ko": "나는 큰 소년이다.", "stage": "001-050"}, {"no": 3, "en": "You are my friend.", "ko": "너는 나의 친구다.", "stage": "001-050"}, {"no": 4, "en": "You are my good friend.", "ko": "너는 나의 좋은 친구다.", "stage": "001-050"}, {"no": 5, "en": "This is a cat.", "ko": "이것은 고양이다.", "stage": "001-050"}, {"no": 6, "en": "This is a fat cat.", "ko": "이것은 뚱뚱한 고양이다.", "stage": "001-050"}, {"no": 7, "en": "That is a box.", "ko": "저것은 상자다.", "stage": "001-050"}, {"no": 8, "en": "That is a toy box.", "ko": "저것은 장난감 상자다.", "stage": "001-050"}, {"no": 9, "en": "He is a man.", "ko": "그는 남자다.", "stage": "001-050"}, {"no": 10, "en": "He is a tall man.", "ko": "그는 키가 큰 남자다.", "stage": "001-050"}, {"no": 11, "en": "It is milk.", "ko": "그것은 우유다.", "stage": "051-100"}, {"no": 12, "en": "It is cold milk.", "ko": "그것은 차가운 우유다.", "stage": "051-100"}, {"no": 13, "en": "She is your baby.", "ko": "그녀는 당신의 아기다.", "stage": "051-100"}, {"no": 14, "en": "She is your cute baby.", "ko": "그녀는 당신의 귀여운 아기다.", "stage": "051-100"}, {"no": 15, "en": "The room is warm.", "ko": "그 방은 따뜻하다.", "stage": "051-100"}, {"no": 16, "en": "The small room is warm.", "ko": "그 작은 방은 따뜻하다.", "stage": "051-100"}, {"no": 17, "en": "I am hungry.", "ko": "나는 배고프다.", "stage": "051-100"}, {"no": 18, "en": "I am hungry now.", "ko": "나는 지금 배고프다.", "stage": "051-100"}, {"no": 19, "en": "It is an ant.", "ko": "그것은 한 마리의 개미다.", "stage": "051-100"}, {"no": 20, "en": "It is an old ant.", "ko": "그것은 한 마리의 늙은 개미다.", "stage": "051-100"}, {"no": 21, "en": "This is a bird.", "ko": "이것은 한 마리의 새다.", "stage": "101-150"}, {"no": 22, "en": "This is a white bird.", "ko": "이것은 한 마리의 하얀 새다.", "stage": "101-150"}, {"no": 23, "en": "We are students.", "ko": "우리들은 학생이다.", "stage": "101-150"}, {"no": 24, "en": "We are busy students.", "ko": "우리들은 바쁜 학생이다.", "stage": "101-150"}, {"no": 25, "en": "Your arms are long.", "ko": "당신의 팔들은 길다.", "stage": "101-150"}, {"no": 26, "en": "Your arms are very long.", "ko": "당신의 팔들은 매우 길다.", "stage": "101-150"}, {"no": 27, "en": "My house is clean.", "ko": "나의 집은 깨끗하다.", "stage": "101-150"}, {"no": 28, "en": "My new house is clean.", "ko": "나의 새 집은 깨끗하다.", "stage": "101-150"}, {"no": 29, "en": "The car is here.", "ko": "그 자동차가 여기에 있다.", "stage": "101-150"}, {"no": 30, "en": "The red car is here.", "ko": "그 빨간 자동차가 여기에 있다.", "stage": "101-150"}, {"no": 31, "en": "I have money.", "ko": "나는 돈을 가지고 있다.", "stage": "151-200"}, {"no": 32, "en": "I have some money.", "ko": "나는 돈을 조금 가지고 있다.", "stage": "151-200"}, {"no": 33, "en": "They are bears.", "ko": "그들은 곰이다.", "stage": "151-200"}, {"no": 34, "en": "They are strong bears.", "ko": "그들은 힘센 곰이다.", "stage": "151-200"}, {"no": 35, "en": "Birds fly.", "ko": "새들이 난다.", "stage": "151-200"}, {"no": 36, "en": "Birds fly high.", "ko": "새들이 높이 난다.", "stage": "151-200"}, {"no": 37, "en": "We work.", "ko": "우리는 일한다.", "stage": "151-200"}, {"no": 38, "en": "We work every day.", "ko": "우리는 매일 일한다.", "stage": "151-200"}, {"no": 39, "en": "We eat rice.", "ko": "우리는 밥을 먹는다.", "stage": "151-200"}, {"no": 40, "en": "We eat rice for dinner.", "ko": "우리는 저녁 식사로 밥을 먹는다.", "stage": "151-200"}, {"no": 41, "en": "They play games.", "ko": "그들은 게임을 한다.", "stage": "201-250"}, {"no": 42, "en": "They play games together.", "ko": "그들은 함께 게임을 한다.", "stage": "201-250"}, {"no": 43, "en": "I hear music.", "ko": "나는 음악을 듣는다.", "stage": "201-250"}, {"no": 44, "en": "I hear loud music.", "ko": "나는 시끄러운 음악을 듣는다.", "stage": "201-250"}, {"no": 45, "en": "We read a story.", "ko": "우리는 이야기 하나를 읽는다.", "stage": "201-250"}, {"no": 46, "en": "We read a fun story.", "ko": "우리는 재미있는 이야기 하나를 읽는다.", "stage": "201-250"}, {"no": 47, "en": "I push the door.", "ko": "나는 문을 민다.", "stage": "201-250"}, {"no": 48, "en": "I push and pull the door.", "ko": "나는 문을 밀고 당긴다.", "stage": "201-250"}, {"no": 49, "en": "We live.", "ko": "우리는 산다.", "stage": "201-250"}, {"no": 50, "en": "We live here.", "ko": "우리는 여기에서 산다.", "stage": "201-250"}, {"no": 51, "en": "Thank you.", "ko": "고맙다.", "stage": "251-300"}, {"no": 52, "en": "Thank you so much.", "ko": "정말 고맙다.", "stage": "251-300"}, {"no": 53, "en": "Sit down.", "ko": "앉아라.", "stage": "251-300"}, {"no": 54, "en": "Sit down there.", "ko": "저기 앉아라.", "stage": "251-300"}, {"no": 55, "en": "Wash your hands.", "ko": "너의 손을 씻어라.", "stage": "251-300"}, {"no": 56, "en": "Wash your hands with soap.", "ko": "비누로 너의 손을 씻어라.", "stage": "251-300"}, {"no": 57, "en": "Help me.", "ko": "나를 도와줘.", "stage": "251-300"}, {"no": 58, "en": "Please help me.", "ko": "제발 나를 도와주세요.", "stage": "251-300"}, {"no": 59, "en": "Catch the ball.", "ko": "그 공을 잡아라.", "stage": "251-300"}, {"no": 60, "en": "Catch the black ball.", "ko": "그 검은 공을 잡아라.", "stage": "251-300"}];
+
+  let currentStage = 'all';
+  let filteredWords = [...ALL_WORDS];
+  let currentWordIdx = 0;
+  let currentSentIdx = 0;
+  let isShuffled = false;
+  let currentView = 'card-word';
+
+  // Audio Speech Synthesis setup
+  let synth = window.speechSynthesis;
+  let voices = [];
+
+  function loadVoices() {
+    voices = synth.getVoices();
+  }
+  loadVoices();
+  if (synth.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = loadVoices;
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    synth.cancel(); // stop previous speech immediately
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    
+    // Select US English voice if available
+    const enVoices = voices.filter(v => v.lang === 'en-US' || v.lang.startsWith('en'));
+    if (enVoices.length > 0) {
+      // Prefer Google or high quality voices if present
+      const preferred = enVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('David'));
+      utterance.voice = preferred || enVoices[0];
+    }
+
+    const speed = parseFloat(document.getElementById('speechSpeed').value) || 1.0;
+    utterance.rate = speed;
+    synth.speak(utterance);
+  }
+
+  function speakCurrentWord() {
+    const item = filteredWords[currentWordIdx];
+    if (item) {
+      // If word is "a, an", read "a, an" or just the word
+      const textToSpeak = item.word.replace(',', ' and ');
+      speakText(textToSpeak);
+    }
+  }
+
+  function speakCurrentSentence() {
+    const item = ALL_SENTENCES[currentSentIdx];
+    if (item) {
+      speakText(item.en);
+    }
+  }
+
+  // Filter stage
+  function setStage(stage) {
+    currentStage = stage;
+    document.querySelectorAll('.stage-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (stage === 'all') {
+      filteredWords = [...ALL_WORDS];
+    } else {
+      filteredWords = ALL_WORDS.filter(w => w.stage === stage);
+    }
+
+    if (isShuffled) {
+      shuffleArray(filteredWords);
+    }
+    currentWordIdx = 0;
+    renderWordCard();
+    renderWordTable();
+  }
+
+  function toggleShuffle() {
+    isShuffled = document.getElementById('shuffleToggle').checked;
+    setStage(currentStage);
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  // Render Word Card
+  function renderWordCard() {
+    if (filteredWords.length === 0) return;
+    const item = filteredWords[currentWordIdx];
+
+    document.getElementById('wordBadge').textContent = 'No. ' + String(item.no).padStart(3, '0');
+    document.getElementById('wordStageBadge').textContent = item.stage;
+    document.getElementById('wordDisplay').textContent = item.word;
+
+    const pronEl = document.getElementById('pronDisplay');
+    pronEl.textContent = `[${item.ipa} / ${item.pron_kr}]`;
+    
+    const meaningEl = document.getElementById('meaningDisplay');
+    meaningEl.textContent = item.meaning;
+
+    // Apply masking if checked
+    toggleMasking();
+
+    // Progress
+    const total = filteredWords.length;
+    document.getElementById('counterDisplay').textContent = `${currentWordIdx + 1} / ${total}`;
+    document.getElementById('progressBar').style.width = `${((currentWordIdx + 1) / total) * 100}%`;
+    document.getElementById('jumpNumInput').value = item.no;
+
+    // Auto speak
+    if (document.getElementById('autoSpeakToggle').checked && currentView === 'card-word') {
+      speakCurrentWord();
+    }
+  }
+
+  function toggleMasking() {
+    const hideMeaning = document.getElementById('hideMeaningToggle').checked;
+    const hidePron = document.getElementById('hidePronToggle').checked;
+
+    const meaningEl = document.getElementById('meaningDisplay');
+    const pronEl = document.getElementById('pronDisplay');
+
+    if (hideMeaning) {
+      meaningEl.classList.add('hidden-content');
+    } else {
+      meaningEl.classList.remove('hidden-content');
+    }
+
+    if (hidePron) {
+      pronEl.classList.add('hidden-content');
+    } else {
+      pronEl.classList.remove('hidden-content');
+    }
+  }
+
+  function revealMeaning(e) {
+    e.stopPropagation();
+    document.getElementById('meaningDisplay').classList.toggle('hidden-content');
+  }
+
+  function revealPron(e) {
+    e.stopPropagation();
+    document.getElementById('pronDisplay').classList.toggle('hidden-content');
+  }
+
+  function nextWord() {
+    if (currentWordIdx < filteredWords.length - 1) {
+      currentWordIdx++;
+      renderWordCard();
+    } else {
+      currentWordIdx = 0; // loop back
+      renderWordCard();
+    }
+  }
+
+  function prevWord() {
+    if (currentWordIdx > 0) {
+      currentWordIdx--;
+      renderWordCard();
+    } else {
+      currentWordIdx = filteredWords.length - 1;
+      renderWordCard();
+    }
+  }
+
+  function jumpToWord() {
+    const targetNo = parseInt(document.getElementById('jumpNumInput').value);
+    const foundIdx = filteredWords.findIndex(w => w.no === targetNo);
+    if (foundIdx !== -1) {
+      currentWordIdx = foundIdx;
+      renderWordCard();
+    } else {
+      alert('현재 선택된 단계에서 해당 번호의 단어를 찾을 수 없습니다.');
+    }
+  }
+
+  // Sentence Mode
+  function renderSentenceCard() {
+    const item = ALL_SENTENCES[currentSentIdx];
+    if (!item) return;
+
+    document.getElementById('sentBadge').textContent = `예문 ${String(item.no).padStart(2, '0')} / 60`;
+    document.getElementById('sentStageBadge').textContent = item.stage;
+    document.getElementById('sentDisplay').textContent = item.en;
+    document.getElementById('sentMeaningDisplay').textContent = item.ko;
+
+    const total = ALL_SENTENCES.length;
+    document.getElementById('sentCounterDisplay').textContent = `${currentSentIdx + 1} / ${total}`;
+    document.getElementById('sentProgressBar').style.width = `${((currentSentIdx + 1) / total) * 100}%`;
+
+    if (document.getElementById('autoSpeakToggle').checked && currentView === 'card-sent') {
+      speakCurrentSentence();
+    }
+  }
+
+  function nextSentence() {
+    if (currentSentIdx < ALL_SENTENCES.length - 1) {
+      currentSentIdx++;
+      renderSentenceCard();
+    } else {
+      currentSentIdx = 0;
+      renderSentenceCard();
+    }
+  }
+
+  function prevSentence() {
+    if (currentSentIdx > 0) {
+      currentSentIdx--;
+      renderSentenceCard();
+    } else {
+      currentSentIdx = ALL_SENTENCES.length - 1;
+      renderSentenceCard();
+    }
+  }
+
+  // Switch View
+  function switchView(viewName) {
+    currentView = viewName;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active'));
+
+    const stageBar = document.getElementById('stageFilterBar');
+    if (viewName === 'card-word' || viewName === 'list-word') {
+      stageBar.style.display = 'flex';
+    } else {
+      stageBar.style.display = 'none';
+    }
+
+    if (viewName === 'card-word') {
+      document.querySelector('button[onclick*="card-word"]').classList.add('active');
+      document.getElementById('viewCardWord').classList.add('active');
+      renderWordCard();
+    } else if (viewName === 'card-sent') {
+      document.querySelector('button[onclick*="card-sent"]').classList.add('active');
+      document.getElementById('viewCardSent').classList.add('active');
+      renderSentenceCard();
+    } else if (viewName === 'list-word') {
+      document.querySelector('button[onclick*="list-word"]').classList.add('active');
+      document.getElementById('viewListWord').classList.add('active');
+      renderWordTable();
+    } else if (viewName === 'list-sent') {
+      document.querySelector('button[onclick*="list-sent"]').classList.add('active');
+      document.getElementById('viewListSent').classList.add('active');
+      renderSentTable();
+    }
+  }
+
+  // Tables
+  function renderWordTable() {
+    const tbody = document.getElementById('wordTableBody');
+    tbody.innerHTML = '';
+    const query = document.getElementById('wordSearchInput').value.toLowerCase().trim();
+
+    filteredWords.forEach(w => {
+      if (query && !w.word.toLowerCase().includes(query) && !w.meaning.toLowerCase().includes(query)) {
+        return;
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:600; color:#64748b;">${w.no}</td>
+        <td style="font-weight:700; font-size:1.05rem;">${w.word}</td>
+        <td style="color:#4f46e5;">[${w.ipa} / ${w.pron_kr}]</td>
+        <td>${w.meaning}</td>
+        <td style="text-align:center;">
+          <button class="btn-table-play" onclick="speakText('${w.word.replace(/'/g, "\\'")}')">🔊 듣기</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filterWordTable() {
+    renderWordTable();
+  }
+
+  function renderSentTable() {
+    const tbody = document.getElementById('sentTableBody');
+    tbody.innerHTML = '';
+    const query = document.getElementById('sentSearchInput').value.toLowerCase().trim();
+
+    ALL_SENTENCES.forEach(s => {
+      if (query && !s.en.toLowerCase().includes(query) && !s.ko.toLowerCase().includes(query)) {
+        return;
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:600; color:#64748b;">${s.no}</td>
+        <td style="font-weight:600; font-size:1.02rem;">${s.en}</td>
+        <td style="color:#334155;">${s.ko}</td>
+        <td style="text-align:center;">
+          <button class="btn-table-play" onclick="speakText('${s.en.replace(/'/g, "\\'")}')">🔊 듣기</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filterSentTable() {
+    renderSentTable();
+  }
+
+  // Keyboard Navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    if (currentView === 'card-word') {
+      if (e.code === 'Space' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        nextWord();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        prevWord();
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        speakCurrentWord();
+      } else if (e.code === 'KeyM') {
+        const box = document.getElementById('hideMeaningToggle');
+        box.checked = !box.checked;
+        toggleMasking();
+      } else if (e.code === 'KeyP') {
+        const box = document.getElementById('hidePronToggle');
+        box.checked = !box.checked;
+        toggleMasking();
+      }
+    } else if (currentView === 'card-sent') {
+      if (e.code === 'Space' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        nextSentence();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        prevSentence();
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        speakCurrentSentence();
+      }
+    }
+  });
+
+  // Initial render
+  renderWordCard();
+</script>
+
+</body>
+</html>
