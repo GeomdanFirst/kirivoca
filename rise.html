@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MORNING R.I.S.E. 따라 읽기 · 키즈엔리딩 검단퍼스트점</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Noto Sans KR', 'Inter', sans-serif;
+      background-color: #FAF8F5;
+      color: #1F2937;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <header class="w-full bg-white/90 backdrop-blur border-b border-stone-200/80 sticky top-0 z-20">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl bg-[#1E3A5F] text-white flex items-center justify-center font-extrabold text-sm shadow-sm">KR</span>
+        <div>
+          <p class="text-xs font-semibold text-amber-600 leading-tight">키즈엔리딩 검단퍼스트점</p>
+          <p class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight">MORNING R.I.S.E.</p>
+        </div>
+      </a>
+      <span id="todayBadge" class="text-xs sm:text-sm font-medium text-slate-500 bg-stone-100 px-3 py-1.5 rounded-full"></span>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <a href="index.html"
+        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-stone-200 text-sm font-bold text-slate-700 hover:bg-stone-50 transition">
+        ← 루틴 선택
+      </a>
+
+      <div class="flex items-center gap-2">
+        <label for="weekSelect" class="text-xs font-semibold text-slate-500">다른 주차 보기</label>
+        <select id="weekSelect"
+          class="text-xs sm:text-sm font-semibold bg-white border border-stone-300 rounded-xl px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/30">
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-5 sm:p-8 border border-stone-200/90 shadow-sm space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="modeBadge" class="text-xs font-bold px-2.5 py-1 rounded-full"></span>
+            <button id="resetAutoBtn" type="button"
+              class="hidden text-xs font-bold text-[#1E3A5F] underline underline-offset-2 hover:text-blue-700">
+              이번 달 주차로 돌아가기
+            </button>
+          </div>
+          <h1 id="riseWeekTitle" class="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900"></h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 w-full sm:w-auto">
+          <button id="lvl1Btn" type="button"
+            class="px-4 py-3 rounded-2xl border-2 text-left transition focus:outline-none">
+            <p class="text-xs font-bold opacity-80">LEVEL 1</p>
+            <p class="text-sm sm:text-base font-extrabold">5문장 따라 읽기</p>
+          </button>
+          <button id="lvl2Btn" type="button"
+            class="px-4 py-3 rounded-2xl border-2 text-left transition focus:outline-none">
+            <p class="text-xs font-bold opacity-80">LEVEL 2</p>
+            <p class="text-sm sm:text-base font-extrabold">10문장 따라 읽기</p>
+          </button>
+        </div>
+      </div>
+
+      <div id="playerBox" class="w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center">
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-stone-50 rounded-2xl px-4 py-3 border border-stone-200/70">
+        <p id="levelDesc" class="text-sm font-medium text-slate-700"></p>
+        <span class="text-xs font-semibold text-slate-400">MORNING R.I.S.E.</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /**
+     * =========================================================================
+     * [원장님 설정 영역] 날짜별 R.I.S.E. 주차 및 영상 주소만 수정하시면 됩니다!
+     * - startDate ~ endDate: 해당 주차가 자동으로 열릴 날짜 (YYYY-MM-DD)
+     * - videoUrl: 유튜브 링크(일반/공유/임베드 모두 가능) 또는 MP4 파일 경로
+     * =========================================================================
+     */
+    const RISE_SCHEDULE = [
+      {
+        id: "2026-11-w3",
+        label: "11월 3주차",
+        startDate: "2026-11-01",
+        endDate: "2026-11-30",
+        levels: {
+          1: {
+            title: "Level 1 · 5문장",
+            videoUrl: "https://www.youtube.com/embed/VIDEO_ID_11_L1",
+            desc: "11월 3주차 Level 1(5문장) 영상을 보며 큰 소리로 3번 따라 읽어보세요."
+          },
+          2: {
+            title: "Level 2 · 10문장",
+            videoUrl: "https://www.youtube.com/embed/VIDEO_ID_11_L2",
+            desc: "11월 3주차 Level 2(10문장) 영상의 끊어 읽기 리듬에 맞춰 따라 읽어보세요."
+          }
+        }
+      },
+      {
+        id: "2026-12-w4",
+        label: "12월 4주차",
+        startDate: "2026-12-01",
+        endDate: "2026-12-31",
+        levels: {
+          1: {
+            title: "Level 1 · 5문장",
+            videoUrl: "https://www.youtube.com/embed/VIDEO_ID_12_L1",
+            desc: "12월 4주차 Level 1(5문장) 영상을 보며 큰 소리로 3번 따라 읽어보세요."
+          },
+          2: {
+            title: "Level 2 · 10문장",
+            videoUrl: "https://www.youtube.com/embed/VIDEO_ID_12_L2",
+            desc: "12월 4주차 Level 2(10문장) 영상의 끊어 읽기 리듬에 맞춰 따라 읽어보세요."
+          }
+        }
+      }
+    ];
+
+    function getTodayString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function findAutoWeekId() {
+      const today = getTodayString();
+      const matched = RISE_SCHEDULE.find(item => today >= item.startDate && today <= item.endDate);
+      return matched ? matched.id : RISE_SCHEDULE[0].id;
+    }
+
+    function toEmbedUrl(url) {
+      if (!url) return "";
+      if (url.includes("youtube.com/embed/")) return url;
+      const watchMatch = url.match(/[?&]v=([^&]+)/);
+      if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+      const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+      if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+      return url;
+    }
+
+    const autoWeekId = findAutoWeekId();
+    const state = {
+      selectedWeekId: autoWeekId,
+      selectedLevel: 1
+    };
+
+    const weekSelect = document.getElementById("weekSelect");
+    const modeBadge = document.getElementById("modeBadge");
+    const resetAutoBtn = document.getElementById("resetAutoBtn");
+    const riseWeekTitle = document.getElementById("riseWeekTitle");
+    const lvl1Btn = document.getElementById("lvl1Btn");
+    const lvl2Btn = document.getElementById("lvl2Btn");
+    const playerBox = document.getElementById("playerBox");
+    const levelDesc = document.getElementById("levelDesc");
+
+    function initDropdown() {
+      weekSelect.innerHTML = "";
+      RISE_SCHEDULE.forEach(week => {
+        const opt = document.createElement("option");
+        opt.value = week.id;
+        opt.textContent = week.id === autoWeekId ? `${week.label} (이번 달)` : week.label;
+        weekSelect.appendChild(opt);
+      });
+    }
+
+    function renderRisePlayer() {
+      const week = RISE_SCHEDULE.find(w => w.id === state.selectedWeekId) || RISE_SCHEDULE[0];
+      const isAuto = week.id === autoWeekId;
+      const levelData = week.levels[state.selectedLevel];
+
+      weekSelect.value = week.id;
+      riseWeekTitle.textContent = `${week.label} 따라 읽기`;
+
+      if (isAuto) {
+        modeBadge.textContent = "📅 이번 달 자동 선택";
+        modeBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-[#1E3A5F] border border-blue-100";
+        resetAutoBtn.classList.add("hidden");
+      } else {
+        modeBadge.textContent = "🔁 복습 모드";
+        modeBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+        resetAutoBtn.classList.remove("hidden");
+      }
+
+      const activeClass = "border-[#1E3A5F] bg-[#1E3A5F] text-white shadow-sm";
+      const inactiveClass = "border-stone-200 bg-stone-50 text-slate-700 hover:border-slate-300";
+      lvl1Btn.className = `px-4 py-3 rounded-2xl border-2 text-left transition focus:outline-none ${state.selectedLevel === 1 ? activeClass : inactiveClass}`;
+      lvl2Btn.className = `px-4 py-3 rounded-2xl border-2 text-left transition focus:outline-none ${state.selectedLevel === 2 ? activeClass : inactiveClass}`;
+
+      levelDesc.textContent = levelData.desc;
+
+      const url = levelData.videoUrl.trim();
+      if (!url || url.includes("VIDEO_ID_")) {
+        playerBox.innerHTML = `
+          <div class="text-center px-6 py-8 text-white space-y-2">
+            <p class="text-3xl">🎬</p>
+            <p class="text-base sm:text-lg font-bold">${week.label} · ${levelData.title}</p>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
+              코드 상단의 <code class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300">RISE_SCHEDULE</code>에서
+              유튜브 영상 주소나 MP4 파일 경로를 넣으면 이곳에 영상이 바로 재생됩니다.
+            </p>
+          </div>
+        `;
+      } else if (url.toLowerCase().endsWith(".mp4")) {
+        playerBox.innerHTML = `
+          <video class="w-full h-full object-contain bg-black" controls playsinline>
+            <source src="${url}" type="video/mp4" />
+            브라우저가 동영상을 지원하지 않습니다.
+          </video>
+        `;
+      } else {
+        const embedUrl = toEmbedUrl(url);
+        playerBox.innerHTML = `
+          <iframe
+            class="w-full h-full"
+            src="${embedUrl}?rel=0"
+            title="${week.label} ${levelData.title}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        `;
+      }
+    }
+
+    lvl1Btn.addEventListener("click", () => {
+      state.selectedLevel = 1;
+      renderRisePlayer();
+    });
+    lvl2Btn.addEventListener("click", () => {
+      state.selectedLevel = 2;
+      renderRisePlayer();
+    });
+    weekSelect.addEventListener("change", (e) => {
+      state.selectedWeekId = e.target.value;
+      renderRisePlayer();
+    });
+    resetAutoBtn.addEventListener("click", () => {
+      state.selectedWeekId = autoWeekId;
+      renderRisePlayer();
+    });
+
+    const now = new Date();
+    document.getElementById("todayBadge").textContent = `${now.getMonth() + 1}월 ${now.getDate()}일`;
+    initDropdown();
+    renderRisePlayer();
+  </script>
+</body>
+</html>
